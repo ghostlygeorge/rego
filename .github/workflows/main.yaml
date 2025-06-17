@@ -1,0 +1,65 @@
+name: Django CI
+
+on:
+  push:
+    branches:
+      - main  # Trigger workflow only on push to 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.6'
+
+      - name: Install dependencies and check project
+        run: |
+          python -m pip install --upgrade pip virtualenv
+          virtualenv env
+          source env/bin/activate
+          pip install -r requirements.txt
+          python manage.py check
+
+  test:
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.6'
+
+      - name: Run tests
+        run: |
+          python -m pip install --upgrade pip virtualenv
+          virtualenv env
+          source env/bin/activate
+          pip install -r requirements.txt
+          python manage.py test taskManager
+
+  integration:
+    runs-on: ubuntu-20.04
+    needs: test
+    steps:
+      - name: Run integration placeholder
+        run: echo "This is an integration step"
+
+      - name: Simulate failure
+        run: exit 1
+        continue-on-error: true
+
+  prod:
+    runs-on: ubuntu-20.04
+    needs: integration
+    steps:
+      - name: Deploy placeholder
+        run: echo "This is a deploy step."
+
