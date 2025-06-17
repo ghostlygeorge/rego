@@ -58,7 +58,7 @@ jobs:
         continue-on-error: true  # allow job to fail without stopping the pipeline
 
       - name: Upload OAST results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()  # always run, even if previous steps fail
         with:
           name: Safety
