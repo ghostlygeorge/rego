@@ -3,11 +3,11 @@ name: Django CI
 on:
   push:
     branches:
-      - main  # Trigger workflow only on push to 'main'
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -26,7 +26,7 @@ jobs:
           python manage.py check
 
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Checkout code
@@ -45,9 +45,28 @@ jobs:
           pip install -r requirements.txt
           python manage.py test taskManager
 
-  integration:
-    runs-on: ubuntu-20.04
+  oast:
+    runs-on: ubuntu-22.04
     needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Safety scan
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/src hysnsec/safety check -r requirements.txt --json > oast-results.json
+        continue-on-error: true  # allow job to fail without stopping the pipeline
+
+      - name: Upload OAST results
+        uses: actions/upload-artifact@v3
+        if: always()  # always run, even if previous steps fail
+        with:
+          name: Safety
+          path: oast-results.json
+
+  integration:
+    runs-on: ubuntu-22.04
+    needs: oast
     steps:
       - name: Run integration placeholder
         run: echo "This is an integration step"
@@ -57,7 +76,7 @@ jobs:
         continue-on-error: true
 
   prod:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: integration
     steps:
       - name: Deploy placeholder
